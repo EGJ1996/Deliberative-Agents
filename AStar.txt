@@ -1,0 +1,54 @@
+public void aStar(State myState,List<City> graph, City start, City goal) {
+        final int size = graph.size();
+        final Set<City> closedSet = new HashSet<City>(size);
+        final List<City> openSet = new ArrayList<City>(size);
+        openSet.add(start);
+
+        final Map<City,Integer> gScore = new HashMap<City,Integer>();
+        gScore.put(start, 0);
+
+        final Map<City,Integer> fScore = new HashMap<City,Integer>();
+        for (City v : graph)
+            fScore.put(v, Integer.MAX_VALUE);
+        fScore.put(start, heuristicCostEstimate(myState,Heuristics.Heuristic2));
+
+        final Comparator<City> comparator = new Comparator<City>() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int compare(City o1, City o2) {
+                if (fScore.get(o1) < fScore.get(o2))
+                    return -1;
+                if (fScore.get(o2) < fScore.get(o1))
+                    return 1;
+                return 0;
+            }
+        };
+
+        while (!openSet.isEmpty()) {
+            final City current = openSet.get(0);
+            if (current.equals(goal))
+                return;
+
+            openSet.remove(0);
+            closedSet.add(current);
+            for (City nbh : current.neighbors()){
+                if (closedSet.contains(nbh))
+                    continue;
+
+                final int tenativeGScore = gScore.get(current) + (int)current.distanceTo(nbh); // length of this path.
+                if (!openSet.contains(nbh))
+                    openSet.add(nbh); // Discover a new node
+                else if (tenativeGScore >= gScore.get(nbh))
+                    continue;
+
+                gScore.put(nbh, tenativeGScore);
+                final int estimatedFScore = gScore.get(nbh) + heuristicCostEstimate(myState,Heuristics.Heuristic1);
+                fScore.put(nbh, estimatedFScore);
+
+                Collections.sort(openSet,comparator);
+            }
+        }
+	}
+	
